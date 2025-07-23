@@ -4,8 +4,8 @@ languageName = "English"
 languagedirection = "ltr"
 title = "IRaf Blog"
 weight = 1
-[ru]
-languageName = "Russian"
-languagedirection = "ltr"
-title = "IRaf блог"
-weight = 2
+# [ru]
+# languageName = "Russian"
+# languagedirection = "ltr"
+# title = "IRaf блог"
+# weight = 2
