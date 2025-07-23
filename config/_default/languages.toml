@@ -2,10 +2,10 @@
 [en]
 languageName = "English"
 languagedirection = "ltr"
-title = "Example Site"
+title = "IRaf Blog"
 weight = 1
 [ru]
 languageName = "Russian"
 languagedirection = "ltr"
-title = "Пример сайта"
+title = "IRaf блог"
 weight = 2
