@@ -25,57 +25,79 @@
         </div>
         {{ partial "footer/include.html" . }}
         <script>
-            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
-            const texts = [
-                "Привет, путник!",
-                "Добро пожаловать в мой блог!",
-                "Здесь мысли обретают форму.",
-                "Frontend, backend и всё между.",
-                "Каждый день — новая идея."
-            ];
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+  const texts = [
+    "Добро пожаловать!",
+    "Это мой блог о вебе.",
+    "JavaScript — это магия.",
+    "Больше, чем просто код.",
+    "Просто мысли вслух."
+  ];
 
-            function scrambleText(element, finalText) {
-                let iteration = 0;
-                let currentText = element.innerText;
-                let maxLength = Math.max(currentText.length, finalText.length);
+  // Возвращает случайный символ из letters
+  function randomChar() {
+    return letters[Math.floor(Math.random() * letters.length)];
+  }
 
-                clearInterval(element._interval); // Очищаем предыдущую анимацию (если была)
+  // Шифрует текст посимвольно
+  function encryptText(current, targetLength) {
+    const maxLen = Math.max(current.length, targetLength);
+    return Array.from({ length: maxLen }, (_, i) =>
+      i < current.length ? randomChar() : randomChar()
+    ).join("");
+  }
 
-                element._interval = setInterval(() => {
-                element.innerText = finalText
-                    .padEnd(maxLength, " ") // чтобы избежать undefined при .charAt
-                    .split("")
-                    .map((char, index) => {
-                    if (index < iteration) {
-                        return finalText.charAt(index);
-                    }
-                    return letters[Math.floor(Math.random() * letters.length)];
-                    })
-                    .join("");
+  // Расшифровывает по буквам
+  function decryptTextStep(current, target, progress) {
+    return target
+      .split("")
+      .map((char, i) => (i < progress ? char : randomChar()))
+      .join("");
+  }
 
-                if (iteration >= maxLength) {
-                    clearInterval(element._interval);
-                }
+  function animateTransition(element, newText) {
+    const oldText = element.innerText;
+    let encrypted = oldText;
+    let step = 0;
+    const maxLen = Math.max(oldText.length, newText.length);
 
-                iteration += 1 / 2;
-                }, 30);
-            }
+    // 1. Шифруем старый текст
+    const encryptInterval = setInterval(() => {
+      encrypted = encryptText(encrypted, newText.length);
+      element.innerText = encrypted;
+      step++;
+      if (step > 10) {
+        clearInterval(encryptInterval);
 
-            function animateAllDescriptions() {
-                const elements = document.querySelectorAll(".site-description");
-                const newText = texts[Math.floor(Math.random() * texts.length)];
+        // 2. Плавно расшифровываем на новый текст
+        let progress = 0;
+        const decryptInterval = setInterval(() => {
+          element.innerText = decryptTextStep(encrypted, newText, progress);
+          progress++;
+          if (progress > newText.length) {
+            clearInterval(decryptInterval);
+          }
+        }, 50);
+      }
+    }, 50);
+  }
 
-                elements.forEach((el) => {
-                scrambleText(el, newText);
-                });
-            }
+  function updateDescriptions() {
+    const elements = document.querySelectorAll(".site-description");
+    elements.forEach((el) => {
+      const newText = texts[Math.floor(Math.random() * texts.length)];
+      animateTransition(el, newText);
+    });
+  }
 
-            document.addEventListener("DOMContentLoaded", () => {
-                animateAllDescriptions(); // первый запуск сразу
+  document.addEventListener("DOMContentLoaded", () => {
+    // Первый запуск
+    setTimeout(updateDescriptions, 1000);
 
-                // Повторять каждую минуту
-                setInterval(animateAllDescriptions, 60000);
-            });
-        </script>
+    // Повторяем каждые 30 секунд
+    setInterval(updateDescriptions, 30000);
+  });
+</script>
+
     </body>
 </html>
