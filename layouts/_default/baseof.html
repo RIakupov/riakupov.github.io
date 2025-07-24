@@ -34,52 +34,90 @@
     "Просто мысли вслух."
   ];
 
-  // Возвращает случайный символ из letters
+  // Возвращает случайный символ
   function randomChar() {
     return letters[Math.floor(Math.random() * letters.length)];
   }
 
-  // Шифрует текст посимвольно
-  function encryptText(current, targetLength) {
-    const maxLen = Math.max(current.length, targetLength);
-    return Array.from({ length: maxLen }, (_, i) =>
-      i < current.length ? randomChar() : randomChar()
-    ).join("");
+  // Добавляет пробелы до нужной длины
+  function padToLength(str, length) {
+    return str.padEnd(length, " ");
   }
 
-  // Расшифровывает по буквам
-  function decryptTextStep(current, target, progress) {
-    return target
-      .split("")
-      .map((char, i) => (i < progress ? char : randomChar()))
-      .join("");
-  }
+  // Шаговая шифровка: один символ за раз
+  function stepEncrypt(el, text, callback) {
+    const maxLen = text.length;
+    let current = text.split("");
+    let i = 0;
 
-  function animateTransition(element, newText) {
-    const oldText = element.innerText;
-    let encrypted = oldText;
-    let step = 0;
-    const maxLen = Math.max(oldText.length, newText.length);
+    function loopChar(charIndex) {
+      let count = 0;
+      const originalChar = current[charIndex];
 
-    // 1. Шифруем старый текст
-    const encryptInterval = setInterval(() => {
-      encrypted = encryptText(encrypted, newText.length);
-      element.innerText = encrypted;
-      step++;
-      if (step > 10) {
-        clearInterval(encryptInterval);
+      const interval = setInterval(() => {
+        current[charIndex] = randomChar();
+        el.innerText = current.join("");
+        count++;
 
-        // 2. Плавно расшифровываем на новый текст
-        let progress = 0;
-        const decryptInterval = setInterval(() => {
-          element.innerText = decryptTextStep(encrypted, newText, progress);
-          progress++;
-          if (progress > newText.length) {
-            clearInterval(decryptInterval);
+        if (count >= 4) {
+          current[charIndex] = randomChar(); // Финальный зашифрованный символ
+          clearInterval(interval);
+          el.innerText = current.join("");
+          i++;
+          if (i < maxLen) {
+            loopChar(i); // Шифруем следующий символ
+          } else {
+            // Пауза перед расшифровкой
+            setTimeout(() => callback(), 400);
           }
-        }, 50);
-      }
-    }, 50);
+        }
+      }, 80); // немного медленнее
+    }
+
+    loopChar(i);
+  }
+
+  // Шаговая расшифровка
+  function stepDecrypt(el, finalText) {
+    const maxLen = finalText.length;
+    let current = el.innerText.split("");
+    let i = 0;
+
+    function loopDecrypt(charIndex) {
+      let count = 0;
+
+      const interval = setInterval(() => {
+        current[charIndex] = randomChar();
+        el.innerText = current.join("");
+        count++;
+
+        if (count >= 4) {
+          current[charIndex] = finalText[charIndex];
+          clearInterval(interval);
+          el.innerText = current.join("");
+
+          i++;
+          if (i < maxLen) {
+            loopDecrypt(i);
+          }
+        }
+      }, 80);
+    }
+
+    loopDecrypt(i);
+  }
+
+  function animateTransition(el, newText) {
+    const oldText = el.innerText;
+    const maxLen = Math.max(oldText.length, newText.length);
+    const paddedOld = padToLength(oldText, maxLen);
+    const paddedNew = padToLength(newText, maxLen);
+
+    el.innerText = paddedOld;
+
+    stepEncrypt(el, paddedOld, () => {
+      stepDecrypt(el, paddedNew);
+    });
   }
 
   function updateDescriptions() {
@@ -91,13 +129,11 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    // Первый запуск
     setTimeout(updateDescriptions, 1000);
-
-    // Повторяем каждые 30 секунд
     setInterval(updateDescriptions, 30000);
   });
 </script>
+
 
     </body>
 </html>
