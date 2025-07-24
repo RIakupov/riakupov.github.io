@@ -34,9 +34,9 @@
     "Просто мысли вслух."
   ];
 
-  const ENCRYPT_SPEED = 50;     // скорость посимвольной шифровки (меньше — быстрее)
-  const DECRYPT_SPEED = 50;     // скорость посимвольной расшифровки
-  const GLITCH_COUNT = 3;       // сколько раз символ "глючит" перед фиксацией
+  const ENCRYPT_SPEED = 50;     // скорость шифровки (меньше = быстрее)
+  const DECRYPT_SPEED = 50;     // скорость расшифровки
+  const GLITCH_COUNT = 3;       // сколько раз «глючит» каждый символ
   const PAUSE_BETWEEN = 15000;  // пауза между циклами (в мс)
 
   function randomChar() {
@@ -47,7 +47,7 @@
     return str.padEnd(length, " ");
   }
 
-  // Шифровка одного символа с глюками
+  // Зашумление одного символа
   function glitchChar(el, chars, index) {
     return new Promise((resolve) => {
       let count = 0;
@@ -57,7 +57,7 @@
         count++;
         if (count >= GLITCH_COUNT) {
           clearInterval(interval);
-          chars[index] = randomChar(); // финальный зашифрованный символ
+          chars[index] = randomChar(); // финальный глюк
           el.innerText = chars.join("");
           resolve();
         }
@@ -83,29 +83,29 @@
     });
   }
 
-  // Шифровка всей строки по очереди
-  async function stepEncrypt(el, textLength) {
+  // Шифруем строку
+  async function stepEncrypt(el, length) {
     const chars = el.innerText.split("");
-    for (let i = 0; i < textLength; i++) {
+    for (let i = 0; i < length; i++) {
       await glitchChar(el, chars, i);
     }
   }
 
-  // Расшифровка всей строки по очереди
+  // Расшифровываем строку
   async function stepDecrypt(el, finalText) {
-    const chars = el.innerText.split("");
-    for (let i = 0; i < finalText.length; i++) {
+    let chars = el.innerText.split("");
+    const targetLength = finalText.length;
+
+    for (let i = 0; i < targetLength; i++) {
       await decryptChar(el, chars, finalText, i);
     }
 
-    // Удаление лишних символов, если финальный текст короче
-    if (chars.length > finalText.length) {
-      chars.length = finalText.length;
-      el.innerText = chars.join("");
-    }
+    // Удаляем лишние символы сразу после завершения
+    chars = chars.slice(0, targetLength);
+    el.innerText = chars.join("");
   }
 
-  // Главная функция анимации
+  // Основная анимация для одного элемента
   async function animateElement(el, newText) {
     const oldText = el.innerText;
     const maxLen = Math.max(oldText.length, newText.length);
@@ -116,8 +116,12 @@
 
     await stepEncrypt(el, paddedOld.length);
     await stepDecrypt(el, paddedNew);
+
+    // Гарантируем финальную очистку от пробелов
+    el.innerText = newText;
   }
 
+  // Цикл для всех .site-description
   async function startCycle() {
     const elements = document.querySelectorAll(".site-description");
 
@@ -135,6 +139,7 @@
     startCycle();
   });
 </script>
+
 
 
 
