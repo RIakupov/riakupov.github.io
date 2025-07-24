@@ -1,0 +1,120 @@
+<script>
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+    const texts = [
+        "Code like a pro — slip once, and you're the villain in someone’s breach report.",
+        "Write code like every line will be audited by a hacker with a grudge.",
+        "Your code is either a fortress or an open door — choose wisely.",
+        "Кодим безопасно: один баг — и ты уже хакер поневоле."
+    ];
+
+    const ENCRYPT_SPEED = 5;
+    const DECRYPT_SPEED = 5;
+    const GLITCH_COUNT = 3;
+    const PAUSE_BETWEEN = 15000;
+
+    function randomChar() {
+        return letters[Math.floor(Math.random() * letters.length)];
+    }
+
+    function padToLength(str, length) {
+        return str.padEnd(length, " ");
+    }
+
+    function glitchChar(el, chars, index) {
+        return new Promise((resolve) => {
+            if (chars[index] === " ") {
+                resolve();
+                return;
+            }
+            let count = 0;
+            const interval = setInterval(() => {
+                chars[index] = randomChar();
+                el.innerText = chars.join("");
+                count++;
+                if (count >= GLITCH_COUNT) {
+                    clearInterval(interval);
+                    chars[index] = randomChar();
+                    el.innerText = chars.join("");
+                    resolve();
+                }
+            }, ENCRYPT_SPEED);
+        });
+    }
+
+    function decryptChar(el, chars, final, index) {
+        return new Promise((resolve) => {
+            if (final[index] === " ") {
+                chars[index] = " ";
+                el.innerText = chars.join("");
+                resolve();
+                return;
+            }
+            let count = 0;
+            const interval = setInterval(() => {
+                chars[index] = randomChar();
+                el.innerText = chars.join("");
+                count++;
+                if (count >= GLITCH_COUNT) {
+                    clearInterval(interval);
+                    chars[index] = final[index];
+                    el.innerText = chars.join("");
+                    resolve();
+                }
+            }, DECRYPT_SPEED);
+        });
+    }
+
+    async function stepEncrypt(el, length) {
+        const chars = el.innerText.split("");
+        for (let i = 0; i < length; i++) {
+            await glitchChar(el, chars, i);
+        }
+    }
+
+
+    async function stepDecrypt(el, finalText) {
+        let chars = el.innerText.split("");
+        const targetLength = finalText.length;
+
+        for (let i = 0; i < targetLength; i++) {
+            await decryptChar(el, chars, finalText, i);
+        }
+
+        if (chars.length > targetLength) {
+            chars = chars.slice(0, targetLength);
+            el.innerText = chars.join("");
+        }
+
+        el.innerText = finalText;
+    }
+
+    async function animateElement(el, newText) {
+        const oldText = el.innerText;
+        const maxLen = Math.max(oldText.length, newText.length);
+        const paddedOld = padToLength(oldText, maxLen);
+
+        el.innerText = paddedOld;
+
+        await stepEncrypt(el, paddedOld.length);
+        await stepDecrypt(el, newText);
+
+        el.innerText = newText;
+    }
+
+    async function startCycle() {
+        const elements = document.querySelectorAll(".site-description");
+
+        while (true) {
+            for (const el of elements) {
+                const newText = texts[Math.floor(Math.random() * texts.length)];
+                await animateElement(el, newText);
+            }
+
+            await new Promise((res) => setTimeout(res, PAUSE_BETWEEN));
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        startCycle();
+    });
+</script>
