@@ -96,18 +96,16 @@ async function stepDecrypt(el, finalText) {
   let chars = el.innerText.split("");
   const targetLength = finalText.length;
 
-  // Сначала расшифровываем символы, которые есть в финальном тексте
+  // Расшифровываем только нужное количество символов
   for (let i = 0; i < targetLength; i++) {
     await decryptChar(el, chars, finalText, i);
   }
 
-  // Потом постепенно удаляем лишние символы (если есть)
-  while (chars.length > targetLength) {
-    chars.pop();            // удаляем последний символ
-    el.innerText = chars.join("");
-    await new Promise(r => setTimeout(r, DECRYPT_SPEED)); // пауза между удалениями
-  }
+  // Удаляем лишние символы сразу, без анимации
+  chars = chars.slice(0, targetLength);
+  el.innerText = chars.join("");
 }
+
 
 
   // Основная анимация для одного элемента
