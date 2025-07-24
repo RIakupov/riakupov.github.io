@@ -1,14 +1,14 @@
 <script>
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
     const texts = [
-        "Code like a pro — slip once, and you're the villain in someone’s breach report.",
-        "Write code like every line will be audited by a hacker with a grudge.",
-        "Your code is either a fortress or an open door — choose wisely.",
-        "Кодим безопасно: один баг — и ты уже хакер поневоле."
+        "Code like a pro — slip once, and you're the villain in someone’s breach report. ",
+        // "Write code like every line will be audited by a hacker with a grudge. ",
+        // "Your code is either a fortress or an open door — choose wisely. ",
+        // "Кодим безопасно: один баг — и ты уже хакер поневоле."
     ];
 
-    const ENCRYPT_SPEED = 5;
-    const DECRYPT_SPEED = 5;
+    const ENCRYPT_SPEED = 10;
+    const DECRYPT_SPEED = 10;
     const GLITCH_COUNT = 3;
     const PAUSE_BETWEEN = 15000;
 
@@ -71,7 +71,6 @@
         }
     }
 
-
     async function stepDecrypt(el, finalText) {
         let chars = el.innerText.split("");
         const targetLength = finalText.length;
@@ -80,12 +79,24 @@
             await decryptChar(el, chars, finalText, i);
         }
 
-        if (chars.length > targetLength) {
-            chars = chars.slice(0, targetLength);
-            el.innerText = chars.join("");
-        }
+        let index = targetLength;
 
-        el.innerText = finalText;
+        while (chars.length > targetLength) {
+            await new Promise((resolve) => {
+                let count = 0;
+                const interval = setInterval(() => {
+                    chars[index] = randomChar();
+                    el.innerText = chars.join("");
+                    count++;
+                    if (count >= GLITCH_COUNT) {
+                        clearInterval(interval);
+                        chars.splice(index, 1); // Удаляем по индексу
+                        el.innerText = chars.join("");
+                        resolve();
+                    }
+                }, DECRYPT_SPEED);
+            });
+        }
     }
 
     async function animateElement(el, newText) {
