@@ -91,24 +91,27 @@
     }
   }
 
-  // Расшифровываем строку с удалением лишних символов
-async function stepDecrypt(el, finalText) {
-  let chars = el.innerText.split("");
-  const targetLength = finalText.length;
+  // ✅ Расшифровка с мгновенным удалением лишних символов
+  async function stepDecrypt(el, finalText) {
+    let chars = el.innerText.split("");
+    const targetLength = finalText.length;
 
-  // Расшифровываем только нужное количество символов
-  for (let i = 0; i < targetLength; i++) {
-    await decryptChar(el, chars, finalText, i);
+    // Удаляем лишние символы сразу
+    if (chars.length > targetLength) {
+      chars = chars.slice(0, targetLength);
+      el.innerText = chars.join("");
+    }
+
+    // Расшифровываем нужные символы
+    for (let i = 0; i < targetLength; i++) {
+      await decryptChar(el, chars, finalText, i);
+    }
+
+    // Финальная гарантия точного текста
+    el.innerText = finalText;
   }
 
-  // Удаляем лишние символы сразу, без анимации
-  chars = chars.slice(0, targetLength);
-  el.innerText = chars.join("");
-}
-
-
-
-  // Основная анимация для одного элемента
+  // Анимация текста
   async function animateElement(el, newText) {
     const oldText = el.innerText;
     const maxLen = Math.max(oldText.length, newText.length);
@@ -120,11 +123,10 @@ async function stepDecrypt(el, finalText) {
     await stepEncrypt(el, paddedOld.length);
     await stepDecrypt(el, paddedNew);
 
-    // Гарантируем финальную очистку от пробелов
     el.innerText = newText;
   }
 
-  // Цикл для всех .site-description
+  // Запускаем цикл для всех .site-description
   async function startCycle() {
     const elements = document.querySelectorAll(".site-description");
 
@@ -142,9 +144,5 @@ async function stepDecrypt(el, finalText) {
     startCycle();
   });
 </script>
-
-
-
-
     </body>
 </html>
