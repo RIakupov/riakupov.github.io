@@ -91,19 +91,24 @@
     }
   }
 
-  // Расшифровываем строку
-  async function stepDecrypt(el, finalText) {
-    let chars = el.innerText.split("");
-    const targetLength = finalText.length;
+  // Расшифровываем строку с удалением лишних символов
+async function stepDecrypt(el, finalText) {
+  let chars = el.innerText.split("");
+  const targetLength = finalText.length;
 
-    for (let i = 0; i < targetLength; i++) {
-      await decryptChar(el, chars, finalText, i);
-    }
-
-    // Удаляем лишние символы сразу после завершения
-    chars = chars.slice(0, targetLength);
-    el.innerText = chars.join("");
+  // Сначала расшифровываем символы, которые есть в финальном тексте
+  for (let i = 0; i < targetLength; i++) {
+    await decryptChar(el, chars, finalText, i);
   }
+
+  // Потом постепенно удаляем лишние символы (если есть)
+  while (chars.length > targetLength) {
+    chars.pop();            // удаляем последний символ
+    el.innerText = chars.join("");
+    await new Promise(r => setTimeout(r, DECRYPT_SPEED)); // пауза между удалениями
+  }
+}
+
 
   // Основная анимация для одного элемента
   async function animateElement(el, newText) {
