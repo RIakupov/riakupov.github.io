@@ -34,80 +34,79 @@
     "Просто мысли вслух."
   ];
 
-  // Возвращает случайный символ
+  const ENCRYPT_SPEED = 50;     // скорость посимвольной шифровки (меньше — быстрее)
+  const DECRYPT_SPEED = 50;     // скорость посимвольной расшифровки
+  const GLITCH_COUNT = 3;       // сколько раз символ "глючит" перед фиксацией
+  const PAUSE_BETWEEN = 15000;  // пауза между циклами (в мс)
+
   function randomChar() {
     return letters[Math.floor(Math.random() * letters.length)];
   }
 
-  // Добавляет пробелы до нужной длины
   function padToLength(str, length) {
     return str.padEnd(length, " ");
   }
 
-  // Шаговая шифровка: один символ за раз
-  function stepEncrypt(el, text, callback) {
-    const maxLen = text.length;
-    let current = text.split("");
-    let i = 0;
-
-    function loopChar(charIndex) {
+  // Шифровка одного символа с глюками
+  function glitchChar(el, chars, index) {
+    return new Promise((resolve) => {
       let count = 0;
-      const originalChar = current[charIndex];
-
       const interval = setInterval(() => {
-        current[charIndex] = randomChar();
-        el.innerText = current.join("");
+        chars[index] = randomChar();
+        el.innerText = chars.join("");
         count++;
-
-        if (count >= 4) {
-          current[charIndex] = randomChar(); // Финальный зашифрованный символ
+        if (count >= GLITCH_COUNT) {
           clearInterval(interval);
-          el.innerText = current.join("");
-          i++;
-          if (i < maxLen) {
-            loopChar(i); // Шифруем следующий символ
-          } else {
-            // Пауза перед расшифровкой
-            setTimeout(() => callback(), 400);
-          }
+          chars[index] = randomChar(); // финальный зашифрованный символ
+          el.innerText = chars.join("");
+          resolve();
         }
-      }, 80); // немного медленнее
-    }
-
-    loopChar(i);
+      }, ENCRYPT_SPEED);
+    });
   }
 
-  // Шаговая расшифровка
-  function stepDecrypt(el, finalText) {
-    const maxLen = finalText.length;
-    let current = el.innerText.split("");
-    let i = 0;
-
-    function loopDecrypt(charIndex) {
+  // Расшифровка одного символа
+  function decryptChar(el, chars, final, index) {
+    return new Promise((resolve) => {
       let count = 0;
-
       const interval = setInterval(() => {
-        current[charIndex] = randomChar();
-        el.innerText = current.join("");
+        chars[index] = randomChar();
+        el.innerText = chars.join("");
         count++;
-
-        if (count >= 4) {
-          current[charIndex] = finalText[charIndex];
+        if (count >= GLITCH_COUNT) {
           clearInterval(interval);
-          el.innerText = current.join("");
-
-          i++;
-          if (i < maxLen) {
-            loopDecrypt(i);
-          }
+          chars[index] = final[index];
+          el.innerText = chars.join("");
+          resolve();
         }
-      }, 80);
-    }
-
-    loopDecrypt(i);
+      }, DECRYPT_SPEED);
+    });
   }
 
-  function animateTransition(el, newText) {
+  // Шифровка всей строки по очереди
+  async function stepEncrypt(el, textLength) {
+    const chars = el.innerText.split("");
+    for (let i = 0; i < textLength; i++) {
+      await glitchChar(el, chars, i);
+    }
+  }
+
+  // Расшифровка всей строки по очереди
+  async function stepDecrypt(el, finalText) {
+    const chars = el.innerText.split("");
+    for (let i = 0; i < finalText.length; i++) {
+      await decryptChar(el, chars, finalText, i);
+    }
+
+    // Удаление лишних символов, если финальный текст короче
+    if (chars.length > finalText.length) {
+      chars.length = finalText.length;
+      el.innerText = chars.join("");
+    }
+  }
+
+  // Главная функция анимации
+  async function animateElement(el, newText) {
     const oldText = el.innerText;
     const maxLen = Math.max(oldText.length, newText.length);
     const paddedOld = padToLength(oldText, maxLen);
@@ -115,24 +114,28 @@
 
     el.innerText = paddedOld;
 
-    stepEncrypt(el, paddedOld, () => {
-      stepDecrypt(el, paddedNew);
-    });
+    await stepEncrypt(el, paddedOld.length);
+    await stepDecrypt(el, paddedNew);
   }
 
-  function updateDescriptions() {
+  async function startCycle() {
     const elements = document.querySelectorAll(".site-description");
-    elements.forEach((el) => {
-      const newText = texts[Math.floor(Math.random() * texts.length)];
-      animateTransition(el, newText);
-    });
+
+    while (true) {
+      for (const el of elements) {
+        const newText = texts[Math.floor(Math.random() * texts.length)];
+        await animateElement(el, newText);
+      }
+
+      await new Promise((res) => setTimeout(res, PAUSE_BETWEEN));
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(updateDescriptions, 1000);
-    setInterval(updateDescriptions, 30000);
+    startCycle();
   });
 </script>
+
 
 
     </body>
