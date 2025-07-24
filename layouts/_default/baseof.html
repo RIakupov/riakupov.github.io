@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.LanguageCode }}" dir="{{ default `ltr` .Language.LanguageDirection }}">
+    <head>
+        {{- partial "head/head.html" . -}}
+        {{- block "head" . -}}{{ end }}
+    </head>
+    <body class="{{ block `body-class` . }}{{ end }}">
+        {{- partial "head/colorScheme" . -}}
+
+        {{/* The container is wider when there's any activated widget */}}
+        {{- $hasWidget := false -}}
+        {{- range .Site.Params.widgets -}}
+            {{- if gt (len .) 0 -}}
+                {{- $hasWidget = true -}}
+            {{- end -}}
+        {{- end -}}
+        <div class="container main-container flex on-phone--column {{ if $hasWidget }}extended{{ else }}compact{{ end }}">
+            {{- block "left-sidebar" . -}}
+                {{ partial "sidebar/left.html" . }}
+            {{- end -}}
+            {{- block "right-sidebar" . -}}{{ end }}
+            <main class="main full-width">
+                {{- block "main" . }}{{- end }}
+            </main>
+        </div>
+        {{ partial "footer/include.html" . }}
+        <script>
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+            const texts = [
+                "Привет, путник!",
+                "Добро пожаловать в мой блог!",
+                "Здесь мысли обретают форму.",
+                "Frontend, backend и всё между.",
+                "Каждый день — новая идея."
+            ];
+
+            function scrambleText(element, finalText) {
+                let iteration = 0;
+                let currentText = element.innerText;
+                let maxLength = Math.max(currentText.length, finalText.length);
+
+                clearInterval(element._interval); // Очищаем предыдущую анимацию (если была)
+
+                element._interval = setInterval(() => {
+                element.innerText = finalText
+                    .padEnd(maxLength, " ") // чтобы избежать undefined при .charAt
+                    .split("")
+                    .map((char, index) => {
+                    if (index < iteration) {
+                        return finalText.charAt(index);
+                    }
+                    return letters[Math.floor(Math.random() * letters.length)];
+                    })
+                    .join("");
+
+                if (iteration >= maxLength) {
+                    clearInterval(element._interval);
+                }
+
+                iteration += 1 / 2;
+                }, 30);
+            }
+
+            function animateAllDescriptions() {
+                const elements = document.querySelectorAll(".site-description");
+                const newText = texts[Math.floor(Math.random() * texts.length)];
+
+                elements.forEach((el) => {
+                scrambleText(el, newText);
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                animateAllDescriptions(); // первый запуск сразу
+
+                // Повторять каждую минуту
+                setInterval(animateAllDescriptions, 60000);
+            });
+        </script>
+    </body>
+</html>
